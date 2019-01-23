@@ -6,8 +6,6 @@ import sys
 abs_min = -sys.maxsize - 1
 
 file_loc = "C:\\Developer\\stock-notes\\data\\reliance_24m_15Jan_2019.csv"
-data = pd.read_csv(file_loc)
-cols = data.columns.values
 
 
 def cleanup(x):
@@ -32,19 +30,21 @@ def append_returns(df: pd.DataFrame):
         prev_val = row.Close_Price
 
 
-new_cols = list(map(cleanup, cols))
-data.columns = new_cols
-data['record_date'] = data['Date'].apply(lambda x: get_date(x))
-data.sort_values(['record_date'])
+def process_file(filename):
+    data = pd.read_csv(filename)
+    cols = data.columns.values
+    new_cols = list(map(cleanup, cols))
+    data.columns = new_cols
+    data['record_date'] = data['Date'].apply(lambda x: get_date(x))
+    data.sort_values(['record_date'])
+    append_returns(data)
+    data['abs_return'] = abs(data['return'])
+    data_long_only = data[data['return'] > 0]
+    data_grouped = data.groupby('record_date')
+    data_grouped_stats = data_grouped['abs_return'].agg([np.sum])
+    final_data = data_grouped_stats.describe().transpose()
+    return final_data
 
-append_returns(data)
-data['abs_return'] = abs(data['return'])
-
-data_long_only = data[data['return'] > 0]
-
-data_grouped = data.groupby('record_date')
-data_grouped_stats = data_grouped['abs_return'].agg([np.sum])
-final_data = data_grouped_stats.describe().transpose()
-
-print(type(final_data))
-print(final_data)
+result = process_file(file_loc)
+print(type(result))
+print(result)
