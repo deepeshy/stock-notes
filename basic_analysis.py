@@ -2,10 +2,11 @@ import pandas as pd
 import datetime as dt
 import numpy as np
 import sys
+import os
 
 abs_min = -sys.maxsize - 1
 
-file_loc = "C:\\Developer\\stock-notes\\data\\reliance_24m_15Jan_2019.csv"
+# file_loc = "reliance_24m_15Jan_2019.csv"
 
 
 def cleanup(x):
@@ -43,8 +44,20 @@ def process_file(filename):
     data_grouped = data.groupby('record_date')
     data_grouped_stats = data_grouped['abs_return'].agg([np.sum])
     final_data = data_grouped_stats.describe().transpose()
+    final_data['scrip']=data['Symbol'][0]
     return final_data
 
-result = process_file(file_loc)
-print(type(result))
-print(result)
+
+def process_files(dir_loc):
+    full_results = pd.DataFrame()
+    files = os.listdir(dir_loc)
+    for f in files:
+        if 'csv' in f:
+            new_df = process_file(dir_loc+"\\" + f)
+            full_results = full_results.append(new_df)
+    return full_results
+
+
+dir_location = "C:\\Developer\\stock-notes\\data"
+result = process_files(dir_location)
+print(result[['scrip','max','max','min','count']])
